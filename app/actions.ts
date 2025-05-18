@@ -1,6 +1,7 @@
 "use server";
 
 import { openai } from "@ai-sdk/openai";
+import { xai } from "@ai-sdk/xai";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { startMcpSandbox } from '@/lib/mcp-sandbox';
@@ -41,33 +42,46 @@ function getMessageText(message: any): string {
 }
 
 export async function generateTitle(messages: any[]) {
-  // Convert messages to a format that OpenAI can understand
-  const normalizedMessages = messages.map(msg => ({
-    role: msg.role,
-    content: getMessageText(msg)
-  }));
-  
-  const { object } = await generateObject({
-    model: openai("gpt-4.1"),
-    schema: z.object({
-      title: z.string().min(1).max(100),
-    }),
-    system: `
-    You are a helpful assistant that generates titles for chat conversations.
-    The title should be a short description of the conversation.
-    The title should be no more than 30 characters.
-    The title should be unique and not generic.
-    `,
-    messages: [
-      ...normalizedMessages,
-      {
-        role: "user",
-        content: "Generate a title for the conversation.",
-      },
-    ],
-  });
+  try {
+    // Convert messages to a format that the AI model can understand
+    const normalizedMessages = messages.map(msg => ({
+      role: msg.role,
+      content: getMessageText(msg)
+    }));
+    
+    const { object } = await generateObject({
+      model: xai("grok-3-mini-latest"),
+      schema: z.object({
+        title: z.string().min(1).max(100),
+      }),
+      system: `
+      You are a helpful assistant that generates titles for chat conversations.
+      The title should be a short description of the conversation.
+      The title should be no more than 30 characters.
+      The title should be unique and not generic.
+      `,
+      messages: [
+        ...normalizedMessages,
+        {
+          role: "user",
+          content: "Generate a title for the conversation.",
+        },
+      ],
+    });
 
-  return object.title;
+    return object.title;
+  } catch (error) {
+    console.error("Error generating title:", error);
+    // Return a default title if generation fails
+    const firstMessage = messages.find(m => m.role === 'user');
+    if (firstMessage) {
+      const text = getMessageText(firstMessage);
+      if (text) {
+        return text.slice(0, 30) + (text.length > 30 ? '...' : '');
+      }
+    }
+    return "New Chat";
+  }
 }
 
 export interface KeyValuePair {

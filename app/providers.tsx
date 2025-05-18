@@ -19,12 +19,36 @@ const queryClient = new QueryClient({
   },
 });
 
-export function Providers({ children }: { children: ReactNode }) {
+// Hydration-safe sidebar wrapper
+function HydrationSafeSidebarProvider({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useLocalStorage<boolean>(
     STORAGE_KEYS.SIDEBAR_STATE,
     true
   );
+  const [isHydrated, setIsHydrated] = useState(false);
 
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // During SSR and initial render, use default values to prevent hydration mismatch
+  if (!isHydrated) {
+    return (
+      <SidebarProvider defaultOpen={true}>
+        {children}
+      </SidebarProvider>
+    );
+  }
+
+  // After hydration, use the actual localStorage values
+  return (
+    <SidebarProvider defaultOpen={sidebarOpen} open={sidebarOpen} onOpenChange={setSidebarOpen}>
+      {children}
+    </SidebarProvider>
+  );
+}
+
+export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
@@ -35,10 +59,10 @@ export function Providers({ children }: { children: ReactNode }) {
         themes={["light", "dark", "sunset", "black"]}
       >
         <MCPProvider>
-          <SidebarProvider defaultOpen={sidebarOpen} open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <HydrationSafeSidebarProvider>
             {children}
             <Toaster position="top-center" richColors />
-          </SidebarProvider>
+          </HydrationSafeSidebarProvider>
         </MCPProvider>
       </ThemeProvider>
     </QueryClientProvider>

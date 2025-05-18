@@ -52,8 +52,69 @@ import { Label } from "@/components/ui/label";
 import { useMCP } from "@/lib/context/mcp-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatePresence, motion } from "motion/react";
+import dynamic from "next/dynamic";
 
-export function ChatSidebar() {
+// Client-only wrapper to prevent hydration issues
+function NoSSR({ children }: { children: React.ReactNode }) {
+    const [hasMounted, setHasMounted] = useState(false);
+
+    useEffect(() => {
+        setHasMounted(true);
+    }, []);
+
+    if (!hasMounted) {
+        return null;
+    }
+
+    return <>{children}</>;
+}
+
+// Loading component for SSR
+function ChatSidebarSkeleton() {
+    return (
+        <Sidebar className="shadow-sm bg-background/80 dark:bg-background/40 backdrop-blur-md" collapsible="icon">
+            <SidebarHeader className="p-4 border-b border-border/40">
+                <div className="flex items-center justify-start">
+                    <div className="flex items-center gap-2">
+                        <div className="relative rounded-full bg-primary/70 flex items-center justify-center size-6">
+                            <div className="w-6 h-6 bg-primary/50 rounded-full animate-pulse" />
+                        </div>
+                        <div className="font-semibold text-lg text-foreground/90">MCP</div>
+                    </div>
+                </div>
+            </SidebarHeader>
+            <SidebarContent className="flex flex-col h-[calc(100vh-8rem)]">
+                <SidebarGroup className="flex-1 min-h-0">
+                    <SidebarGroupLabel className="px-4 text-xs font-medium text-muted-foreground/80 uppercase tracking-wider">
+                        Chats
+                    </SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            {Array(3).fill(0).map((_, index) => (
+                                <SidebarMenuItem key={`skeleton-${index}`}>
+                                    <div className="flex items-center gap-2 px-3 py-2">
+                                        <Skeleton className="h-4 w-4 rounded-full" />
+                                        <Skeleton className="h-4 w-full max-w-[180px]" />
+                                        <Skeleton className="h-5 w-5 ml-auto rounded-md flex-shrink-0" />
+                                    </div>
+                                </SidebarMenuItem>
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            </SidebarContent>
+            <SidebarFooter className="p-4 border-t border-border/40 mt-auto">
+                <Button variant="default" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    <span>New Chat</span>
+                </Button>
+            </SidebarFooter>
+        </Sidebar>
+    );
+}
+
+// Main ChatSidebar component
+function ChatSidebarContent() {
     const router = useRouter();
     const pathname = usePathname();
     const [userId, setUserId] = useState<string>('');
@@ -72,7 +133,7 @@ export function ChatSidebar() {
         setUserId(getUserId());
     }, []);
     
-    // Use TanStack Query to fetch chats
+    // Use TanStack Query to fetch chats (only when we have a userId)
     const { chats, isLoading, deleteChat, refreshChats } = useChats(userId);
 
     // Start a new chat
@@ -112,11 +173,6 @@ export function ChatSidebar() {
         window.location.reload();
     };
 
-    // Show loading state if user ID is not yet initialized
-    if (!userId) {
-        return null; // Or a loading spinner
-    }
-
     // Create chat loading skeletons
     const renderChatSkeletons = () => {
         return Array(3).fill(0).map((_, index) => (
@@ -134,13 +190,18 @@ export function ChatSidebar() {
         ));
     };
 
+    // Don't render anything if userId hasn't loaded yet
+    if (!userId) {
+        return <ChatSidebarSkeleton />;
+    }
+
     return (
         <Sidebar className="shadow-sm bg-background/80 dark:bg-background/40 backdrop-blur-md" collapsible="icon">
             <SidebarHeader className="p-4 border-b border-border/40">
                 <div className="flex items-center justify-start">
                     <div className={`flex items-center gap-2 ${isCollapsed ? "justify-center w-full" : ""}`}>
                         <div className={`relative rounded-full bg-primary/70 flex items-center justify-center ${isCollapsed ? "size-5 p-3" : "size-6"}`}>
-                            <Image src="/scira.png" alt="Scira Logo" width={24} height={24} className="absolute transform scale-75" unoptimized quality={100} />
+                            <Image src="/scira.png" alt="Scira Logo" width={24} height={24} className="absolute" style={{ transform: "scale(0.75)" }} unoptimized />
                         </div>
                         {!isCollapsed && (
                             <div className="font-semibold text-lg text-foreground/90">MCP</div>
@@ -467,5 +528,14 @@ export function ChatSidebar() {
                 </DialogContent>
             </Dialog>
         </Sidebar>
+    );
+}
+
+// Exported component with client-only rendering
+export function ChatSidebar() {
+    return (
+        <NoSSR>
+            <ChatSidebarContent />
+        </NoSSR>
     );
 } 

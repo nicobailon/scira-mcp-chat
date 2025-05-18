@@ -8,6 +8,7 @@ import { chats } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { initializeMCPClients, type MCPServerConfig } from '@/lib/mcp-client';
 import { generateTitle } from '@/app/actions';
+import { getGoogleProviderOptions } from '@/ai/google-config';
 
 export const runtime = 'nodejs';
 
@@ -127,11 +128,10 @@ export async function POST(req: Request) {
     tools,
     maxSteps: 20,
     providerOptions: {
-      google: {
-        thinkingConfig: {
-          thinkingBudget: 2048,
-        },
-      },
+      google: getGoogleProviderOptions(selectedModel, {
+        taskComplexity: 'medium',
+        enableImageGeneration: true
+      }) as any, // Type assertion to avoid TS issues with AI SDK types
       anthropic: {
         thinking: {
           type: 'enabled',

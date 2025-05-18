@@ -10,8 +10,8 @@ type SetValue<T> = T | ((val: T) => T);
  */
 export function useLocalStorage<T>(key: string, initialValue: T) {
   // State to store our value
-  // Pass initial state function to useState so logic is only executed once
   const [storedValue, setStoredValue] = useState<T>(initialValue);
+  const [isClient, setIsClient] = useState(false);
 
   // Check if we're in the browser environment
   const isBrowser = typeof window !== 'undefined';
@@ -20,10 +20,13 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   useEffect(() => {
     if (!isBrowser) return;
     
+    setIsClient(true);
+    
     try {
       const item = window.localStorage.getItem(key);
       if (item) {
-        setStoredValue(parseJSON(item));
+        const parsedValue = parseJSON<T>(item);
+        setStoredValue(parsedValue);
       }
     } catch (error) {
       console.error(`Error reading localStorage key "${key}":`, error);
@@ -54,7 +57,8 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     }
   }, [key, storedValue, isBrowser]);
 
-  return [storedValue, setValue] as const;
+  // Return the initial value during SSR/initial render to prevent hydration mismatch
+  return [isClient ? storedValue : initialValue, setValue] as const;
 }
 
 // Helper function to parse JSON with error handling

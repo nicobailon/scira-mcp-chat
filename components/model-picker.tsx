@@ -9,8 +9,9 @@ import {
   SelectValue,
 } from "./ui/select";
 import { cn } from "@/lib/utils";
-import { Sparkles, Zap, Info, Bolt, Code, Brain, Lightbulb, Image, Gauge, Rocket, Bot } from "lucide-react";
+import { Sparkles, Zap, Info, Bolt, Code, Brain, Lightbulb, Image as ImageIcon, Gauge, Rocket, Bot } from "lucide-react";
 import { useState, useEffect } from "react";
+import { GOOGLE_MODEL_FEATURES } from "@/ai/google-config";
 
 interface ModelPickerProps {
   selectedModel: modelID;
@@ -58,7 +59,7 @@ export const ModelPicker = ({ selectedModel, setSelectedModel }: ModelPickerProp
       case 'research':
         return <Lightbulb className="h-2.5 w-2.5" />;
       case 'vision':
-        return <Image className="h-2.5 w-2.5" />;
+        return <ImageIcon className="h-2.5 w-2.5" />;
       case 'fast':
       case 'rapid':
         return <Bolt className="h-2.5 w-2.5" />;

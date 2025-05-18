@@ -2,6 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createGroq } from "@ai-sdk/groq";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createXai } from "@ai-sdk/xai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 import { 
   customProvider, 
@@ -53,6 +54,10 @@ const xaiClient = createXai({
   apiKey: getApiKey('XAI_API_KEY'),
 });
 
+const googleClient = createGoogleGenerativeAI({
+  apiKey: getApiKey('GOOGLE_GENERATIVE_AI_API_KEY') || getApiKey('GOOGLE_API_KEY'),
+});
+
 const languageModels = {
   "gpt-4.1-mini": openaiClient("gpt-4.1-mini"),
   "claude-3-7-sonnet": anthropicClient('claude-3-7-sonnet-20250219'),
@@ -63,6 +68,14 @@ const languageModels = {
     }
   ),
   "grok-3-mini": xaiClient("grok-3-mini-latest"),
+  // Google Gemini Models
+  "gemini-2.5-flash": googleClient("gemini-2.5-flash-preview-04-17"),
+  "gemini-2.5-pro": googleClient("gemini-2.5-pro"),
+  "gemini-2.0-flash": googleClient("gemini-2.0-flash-exp"),
+  "gemini-2.0-flash-thinking": googleClient("gemini-2.0-flash-thinking-exp-01-21"),
+  "gemini-2.0-pro": googleClient("gemini-2.0-pro-exp"),
+  "gemini-1.5-flash": googleClient("gemini-1.5-flash-latest"),
+  "gemini-1.5-pro": googleClient("gemini-1.5-pro-latest"),
 };
 
 export const modelDetails: Record<keyof typeof languageModels, ModelInfo> = {
@@ -94,6 +107,56 @@ export const modelDetails: Record<keyof typeof languageModels, ModelInfo> = {
     apiVersion: "grok-3-mini-latest",
     capabilities: ["Reasoning", "Efficient", "Agentic"]
   },
+  // Google Gemini Models
+  "gemini-2.5-flash": {
+    provider: "Google",
+    name: "Gemini 2.5 Flash",
+    description: "Latest hybrid reasoning model with controllable thinking budget. Fast, cost-efficient with enhanced reasoning capabilities.",
+    apiVersion: "gemini-2.5-flash-preview-04-17",
+    capabilities: ["Reasoning", "Fast", "Efficient", "Thinking"]
+  },
+  "gemini-2.5-pro": {
+    provider: "Google",
+    name: "Gemini 2.5 Pro",
+    description: "Most advanced reasoning model with state-of-the-art performance on complex tasks, coding, and multimodal reasoning.",
+    apiVersion: "gemini-2.5-pro",
+    capabilities: ["Reasoning", "Code", "Vision", "Thinking"]
+  },
+  "gemini-2.0-flash": {
+    provider: "Google",
+    name: "Gemini 2.0 Flash",
+    description: "Enhanced performance workhorse model with multimodal input/output capabilities including native image generation.",
+    apiVersion: "gemini-2.0-flash-exp",
+    capabilities: ["Balance", "Fast", "Vision", "Creative"]
+  },
+  "gemini-2.0-flash-thinking": {
+    provider: "Google",
+    name: "Gemini 2.0 Flash Thinking",
+    description: "First reasoning model that explicitly shows its thoughts, built on Flash's speed with enhanced reasoning capabilities.",
+    apiVersion: "gemini-2.0-flash-thinking-exp-01-21",
+    capabilities: ["Reasoning", "Fast", "Thinking", "Code"]
+  },
+  "gemini-2.0-pro": {
+    provider: "Google",
+    name: "Gemini 2.0 Pro",
+    description: "Best model for coding performance and complex prompts with 2M token context window and enhanced reasoning.",
+    apiVersion: "gemini-2.0-pro-exp",
+    capabilities: ["Code", "Reasoning", "Vision", "Research"]
+  },
+  "gemini-1.5-flash": {
+    provider: "Google",
+    name: "Gemini 1.5 Flash",
+    description: "High-performance model optimized for speed and efficiency with 1M token context window.",
+    apiVersion: "gemini-1.5-flash-latest",
+    capabilities: ["Fast", "Efficient", "Vision", "Code"]
+  },
+  "gemini-1.5-pro": {
+    provider: "Google",
+    name: "Gemini 1.5 Pro",
+    description: "Advanced model with strong performance across reasoning, coding, and multimodal tasks with 1M token context.",
+    apiVersion: "gemini-1.5-pro-latest",
+    capabilities: ["Reasoning", "Code", "Vision", "Research"]
+  },
 };
 
 // Update API keys when localStorage changes (for runtime updates)
@@ -114,4 +177,4 @@ export type modelID = keyof typeof languageModels;
 
 export const MODELS = Object.keys(languageModels);
 
-export const defaultModel: modelID = "qwen-qwq";
+export const defaultModel: modelID = "gemini-2.0-flash";
