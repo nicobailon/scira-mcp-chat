@@ -7,9 +7,10 @@ import { Markdown } from "./markdown";
 import { cn } from "@/lib/utils";
 import { ChevronDownIcon, ChevronUpIcon, LightbulbIcon, BrainIcon } from "lucide-react";
 import { SpinnerIcon } from "./icons";
-import { ToolInvocation } from "./tool-invocation";
+import { ToolInvocation } from "./tool-invocation-with-json-viewer";
 import { CopyButton } from "./copy-button";
-import { HtmlResourceBlock, isHtmlResourceBlock } from "./mcp-ui";
+import { HtmlResourceBlock, isHtmlResourceBlock, HtmlResourceBlockType } from "./mcp-ui";
+import { ChatCommandHandler } from "./chat-command-handler";
 
 interface ReasoningPart {
   type: "reasoning";
@@ -154,24 +155,27 @@ const PurePreviewMessage = ({
         )}
       >
         <div className="flex flex-col w-full space-y-3">
-          {message.parts?.map((part, i) => {
-            switch (part.type) {
-              case "text":
-                return (
-                  <div
-                    key={`message-${message.id}-part-${i}`}
-                    className="flex flex-row gap-2 items-start w-full"
-                  >
+          {message.parts?.length > 0 ? (
+            message.parts.map((part, i) => {
+              switch (part.type) {
+                case "text":
+                  return (
                     <div
-                      className={cn("flex flex-col gap-3 w-full", {
-                        "bg-secondary text-secondary-foreground px-4 py-3 rounded-2xl":
-                          message.role === "user",
-                      })}
+                      key={`message-${message.id}-part-${i}`}
+                      className="flex flex-row gap-2 items-start w-full"
                     >
-                      <Markdown>{part.text}</Markdown>
+                      <div
+                        className={cn("flex flex-col gap-3 w-full", {
+                          "bg-secondary text-secondary-foreground px-4 py-3 rounded-2xl":
+                            message.role === "user",
+                        })}
+                      >
+                        <ChatCommandHandler message={part.text}>
+                          <Markdown>{part.text}</Markdown>
+                        </ChatCommandHandler>
+                      </div>
                     </div>
-                  </div>
-                );
+                  );
               case "tool-invocation":
                 const { toolName, state, args } = part.toolInvocation;
                 const result = 'result' in part.toolInvocation ? part.toolInvocation.result : null;
@@ -207,7 +211,7 @@ const PurePreviewMessage = ({
                   return (
                     <div key={`message-${message.id}-part-${i}`} className="mb-4">
                       <HtmlResourceBlock 
-                        resource={part.resource}
+                        resource={(part as HtmlResourceBlockType).resource}
                         isInteractive={true}
                         maxHeight={400}
                       />
@@ -216,10 +220,25 @@ const PurePreviewMessage = ({
                 }
                 return null;
             }
-          })}
+          })
+          ) : message.content ? (
+            // Handle messages that only have content (no parts)
+            <div className="flex flex-row gap-2 items-start w-full">
+              <div
+                className={cn("flex flex-col gap-3 w-full", {
+                  "bg-secondary text-secondary-foreground px-4 py-3 rounded-2xl":
+                    message.role === "user",
+                })}
+              >
+                <ChatCommandHandler message={message.content}>
+                  <Markdown>{message.content}</Markdown>
+                </ChatCommandHandler>
+              </div>
+            </div>
+          ) : null}
           {shouldShowCopyButton && (
             <div className="flex justify-start mt-2">
-              <CopyButton text={getMessageText()} />
+              <CopyButton text={getMessageText() || message.content || ""} />
             </div>
           )}
         </div>

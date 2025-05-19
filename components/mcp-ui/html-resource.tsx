@@ -48,38 +48,11 @@ const HtmlResourceBlock: React.FC<HtmlResourceBlockProps> = ({
       return { status: "ok", result };
     } catch (error) {
       console.error("Error executing UI action:", error);
-      return { status: "error", error: error.message };
+      return { status: "error", error: error instanceof Error ? error.message : String(error) };
     }
   }, [executeUIAction]);
 
-  // Handle iframe load events
-  const handleIframeLoad = useCallback(() => {
-    setIsLoading(false);
-    setError(null);
-  }, []);
-
-  const handleIframeError = useCallback(() => {
-    setIsLoading(false);
-    setError("Failed to load content");
-  }, []);
-
-  // Set up message listener for iframe communication
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (!iframeRef.current) return;
-      
-      // Verify the message is from our iframe
-      if (event.source !== iframeRef.current.contentWindow) return;
-      
-      // Handle UI action messages
-      if (event.data && event.data.tool) {
-        handleUiAction(event.data.tool, event.data.params);
-      }
-    };
-
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [handleUiAction]);
+  // Already defined above, removed duplicate
 
   const resourceDisplay = (
     <div className={cn("relative border rounded-lg overflow-hidden bg-background", className)}>
@@ -102,17 +75,15 @@ const HtmlResourceBlock: React.FC<HtmlResourceBlockProps> = ({
       )}
       
       {resource && (
-        <MCPHtmlResource
-          resource={resource}
-          onUiAction={handleUiAction}
-          className={cn(
-            "w-full h-full border-0",
-            !isExpanded && maxHeight && `max-h-[${maxHeight}px]`
-          )}
-          onLoad={handleIframeLoad}
-          onError={handleIframeError}
-          ref={iframeRef}
-        />
+        <div className={cn(
+          "w-full h-full",
+          !isExpanded && maxHeight && `max-h-[${maxHeight}px]`
+        )}>
+          <MCPHtmlResource
+            resource={resource}
+            onUiAction={handleUiAction}
+          />
+        </div>
       )}
       
       {/* Resource info header */}
@@ -151,7 +122,6 @@ const HtmlResourceBlock: React.FC<HtmlResourceBlockProps> = ({
                 <MCPHtmlResource
                   resource={resource}
                   onUiAction={handleUiAction}
-                  className="w-full h-full border-0"
                 />
               </div>
             </DialogContent>

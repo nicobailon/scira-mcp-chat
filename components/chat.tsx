@@ -16,6 +16,7 @@ import { convertToUIMessages } from "@/lib/chat-store";
 import { type Message as DBMessage } from "@/lib/db/schema";
 import { nanoid } from "nanoid";
 import { useMCP } from "@/lib/context/mcp-context";
+import { useChatCommands } from "./chat-command-handler";
 
 // Type for chat data from DB
 interface ChatData {
@@ -103,7 +104,7 @@ export default function Chat() {
     } as Message));
   }, [chatData]);
   
-  const { messages, input, handleInputChange, handleSubmit, status, stop } =
+  const { messages, input, handleInputChange, handleSubmit, status, stop, setInput } =
     useChat({
       id: chatId || generatedChatId, // Use generated ID if no chatId in URL
       initialMessages,
@@ -131,9 +132,25 @@ export default function Chat() {
       },
     });
     
+  // Use the chat commands hook
+  const { handleCommand } = useChatCommands(input, setInput);
+  
   // Custom submit handler
-  const handleFormSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    // Check if it's a command
+    const commandResult = await handleCommand(input);
+    
+    if (commandResult.isCommand) {
+      if (commandResult.jsonData) {
+        // Just send the message as is - the ChatCommandHandler will handle the display
+        // when the message is rendered
+      } else if (commandResult.error) {
+        toast.error(commandResult.error);
+        return;
+      }
+    }
     
     if (!chatId && generatedChatId && input.trim()) {
       // If this is a new conversation, redirect to the chat page with the generated ID
@@ -148,7 +165,7 @@ export default function Chat() {
       // Normal submission for existing chats
       handleSubmit(e);
     }
-  }, [chatId, generatedChatId, input, handleSubmit, router]);
+  }, [chatId, generatedChatId, input, handleSubmit, router, handleCommand]);
 
   const isLoading = status === "streaming" || status === "submitted" || isLoadingChat;
 

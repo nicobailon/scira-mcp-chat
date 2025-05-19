@@ -51,7 +51,7 @@ export async function POST(req: Request) {
       return new Response(
         JSON.stringify({ 
           status: "error", 
-          error: toolError.message || "Tool execution failed" 
+          error: toolError instanceof Error ? toolError.message : "Tool execution failed" 
         }),
         { 
           status: 500, 

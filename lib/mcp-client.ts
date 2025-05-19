@@ -31,7 +31,7 @@ export async function initializeMCPClients(
   abortSignal?: AbortSignal
 ): Promise<MCPClientManager> {
   // Initialize tools
-  let tools = {};
+  let tools: Record<string, any> = {};
   const mcpClients: any[] = [];
 
   // Process each MCP server configuration
