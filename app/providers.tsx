@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useLocalStorage } from "@/lib/hooks/use-local-storage";
 import { STORAGE_KEYS } from "@/lib/constants";
 import { MCPProvider } from "@/lib/context/mcp-context";
+import { MCPUIProvider } from "@/lib/context/mcp-ui-context";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -59,10 +60,12 @@ export function Providers({ children }: { children: ReactNode }) {
         themes={["light", "dark", "sunset", "black"]}
       >
         <MCPProvider>
-          <HydrationSafeSidebarProvider>
-            {children}
-            <Toaster position="top-center" richColors />
-          </HydrationSafeSidebarProvider>
+          <MCPUIProvider>
+            <HydrationSafeSidebarProvider>
+              {children}
+              <Toaster position="top-center" richColors />
+            </HydrationSafeSidebarProvider>
+          </MCPUIProvider>
         </MCPProvider>
       </ThemeProvider>
     </QueryClientProvider>

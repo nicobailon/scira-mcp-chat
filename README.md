@@ -17,6 +17,7 @@
 
 - Streaming text responses powered by the [AI SDK by Vercel](https://sdk.vercel.ai/docs), allowing multiple AI providers to be used interchangeably with just a few lines of code.
 - Full integration with [Model Context Protocol (MCP)](https://modelcontextprotocol.io) servers to expand available tools and capabilities.
+- **MCP UI Protocol Support**: Interactive HTML components and external applications can be embedded directly in chat responses.
 - Multiple MCP transport types (SSE and stdio) for connecting to various tool providers.
 - Built-in tool integration for extending AI capabilities.
 - Reasoning model support.
@@ -58,6 +59,31 @@ You can use any MCP-compatible server with this application. Here are some examp
 - [Composio](https://composio.dev/mcp) - Provides search, code interpreter, and other tools
 - [Zapier MCP](https://zapier.com/mcp) - Provides access to Zapier tools
 - Any MCP server using stdio transport with npx and python3
+
+## MCP UI Protocol Support
+
+This application includes support for the [MCP UI Protocol](https://github.com/idosal/mcp-ui), which allows MCP servers to return interactive HTML components and external applications that can be embedded directly in chat responses.
+
+### Features
+
+- **Interactive Components**: Self-contained HTML widgets with JavaScript that can execute actions
+- **External Applications**: Embed external web applications via iframe
+- **Bidirectional Communication**: UI components can send actions back to the MCP server
+- **Expandable Views**: UI components can be expanded to full-screen for better interaction
+
+### URI Schemes
+
+- `ui://` - Self-contained HTML content rendered in a sandboxed iframe
+- `ui-app://` - External applications loaded via iframe src
+
+### For Developers
+
+To create MCP servers with UI support, see our [MCP UI Integration Guide](./docs/MCP_UI_INTEGRATION.md) for detailed implementation instructions.
+
+### Example MCP UI Servers
+
+- [MCP UI Examples](https://github.com/idosal/mcp-ui/tree/main/examples/server) - Official example server with interactive components
+- Host your own MCP UI server using the patterns from the examples
 
 ## License
 

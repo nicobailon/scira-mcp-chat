@@ -9,6 +9,7 @@ import { ChevronDownIcon, ChevronUpIcon, LightbulbIcon, BrainIcon } from "lucide
 import { SpinnerIcon } from "./icons";
 import { ToolInvocation } from "./tool-invocation";
 import { CopyButton } from "./copy-button";
+import { HtmlResourceBlock, isHtmlResourceBlock } from "./mcp-ui";
 
 interface ReasoningPart {
   type: "reasoning";
@@ -201,6 +202,18 @@ const PurePreviewMessage = ({
                   />
                 );
               default:
+                // Check if this is an HTML resource block from MCP UI
+                if (isHtmlResourceBlock(part)) {
+                  return (
+                    <div key={`message-${message.id}-part-${i}`} className="mb-4">
+                      <HtmlResourceBlock 
+                        resource={part.resource}
+                        isInteractive={true}
+                        maxHeight={400}
+                      />
+                    </div>
+                  );
+                }
                 return null;
             }
           })}

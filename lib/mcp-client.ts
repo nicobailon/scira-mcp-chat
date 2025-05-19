@@ -19,6 +19,7 @@ export interface MCPClientManager {
   tools: Record<string, any>;
   clients: any[];
   cleanup: () => Promise<void>;
+  callTool: (tool: string, params: any) => Promise<any>;
 }
 
 /**
@@ -68,10 +69,30 @@ export async function initializeMCPClients(
     });
   }
 
+  // Function to call tools from UI actions
+  const callTool = async (tool: string, params: any) => {
+    console.log(`Calling tool ${tool} with params:`, params);
+    
+    // Find the tool in our tools object
+    if (!(tool in tools)) {
+      throw new Error(`Tool ${tool} not found`);
+    }
+    
+    try {
+      const toolFunction = tools[tool];
+      const result = await toolFunction(params);
+      return result;
+    } catch (error) {
+      console.error(`Error calling tool ${tool}:`, error);
+      throw error;
+    }
+  };
+
   return {
     tools,
     clients: mcpClients,
-    cleanup: async () => await cleanupMCPClients(mcpClients)
+    cleanup: async () => await cleanupMCPClients(mcpClients),
+    callTool
   };
 }
 
